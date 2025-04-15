@@ -1,0 +1,19 @@
+# TLS certificates (don't commit secrets)
+deploy/certs/tls.crt
+deploy/certs/tls.key
+
+# Generated webhook manifest
+deploy/webhook.generated.yaml
+
+# MacOS metadata
+.DS_Store
+
+# Python cache (just in case)
+__pycache__/
+*.pyc
+
+# Shell history or accidental logs
+*.log
+
+# Kubernetes artifacts (optional if you use client-gen or Helm later)
+*.out

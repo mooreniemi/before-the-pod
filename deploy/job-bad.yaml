@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: no-mlflow
+spec:
+  template:
+    spec:
+      containers:
+        - name: dummy
+          image: python:3.11-slim
+          command: ["python", "-c", "print('hello world')"]
+      restartPolicy: Never

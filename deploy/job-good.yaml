@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: yes-mlflow
+spec:
+  template:
+    spec:
+      containers:
+        - name: dummy
+          image: with-mlflow:latest
+          imagePullPolicy: Never
+          command: ["python", "-c", "import mlflow; print('tracking')"]
+      restartPolicy: Never

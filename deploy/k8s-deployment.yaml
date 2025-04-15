@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: before-the-pod
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: before-the-pod
+  template:
+    metadata:
+      labels:
+        app: before-the-pod
+    spec:
+      containers:
+        - name: webhook
+          image: before-the-pod:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 443
+          volumeMounts:
+            - name: certs
+              mountPath: /certs
+              readOnly: true
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          securityContext:
+            privileged: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: before-the-pod-tls
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: before-the-pod
+  namespace: default
+spec:
+  selector:
+    app: before-the-pod
+  ports:
+    - port: 443
+      targetPort: 443
