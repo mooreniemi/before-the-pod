@@ -61,14 +61,17 @@ Or restart it:
 kubectl rollout restart deployment mlflow
 ```
 
-To see the mlflow ui, you need to navigate to `localhost:5005`.
+To see the mlflow ui, you need to navigate to your localhost via the proxying.
 
-
-To deploy MLflow in Minikube:
+Forst, to deploy MLflow in Minikube:
 
 ```bash
 kubectl apply -f deploy/mlflow-deployment.yaml
 kubectl wait --for=condition=ready pod -l app=mlflow --timeout=60s
+```
 
+Then, to see the mlflow ui:
+
+```bash
 minikube service mlflow
 ```
