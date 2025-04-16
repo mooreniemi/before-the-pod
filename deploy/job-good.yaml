@@ -6,8 +6,18 @@ spec:
   template:
     spec:
       containers:
-        - name: dummy
-          image: with-mlflow:latest
+        - name: training
+          image: mlflow-training:latest
           imagePullPolicy: Never
-          command: ["python", "-c", "import mlflow; print('tracking')"]
+          command: ["python", "train.py"]
+          env:
+            - name: HOST_IP
+              value: "mlflow"
+            - name: MLFLOW_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: mlflow-config
+                  key: port
+            - name: MLFLOW_EXPERIMENT_NAME
+              value: "Simple Logistic Regression"
       restartPolicy: Never

@@ -17,3 +17,6 @@ __pycache__/
 
 # Kubernetes artifacts (optional if you use client-gen or Helm later)
 *.out
+
+mlflow.db
+mlruns/

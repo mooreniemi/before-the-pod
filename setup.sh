@@ -27,14 +27,11 @@ CA_BUNDLE=$(base64 < deploy/certs/tls.crt | tr -d '\n')
 echo "📄 Injecting caBundle into webhook.yaml..."
 sed "s|caBundle: .*|caBundle: ${CA_BUNDLE}|" deploy/webhook.yaml > deploy/webhook.generated.yaml
 
-echo "🐳 Building mlflow test image (with-mlflow:latest)..."
-docker build -t with-mlflow:latest - <<EOF
-FROM python:3.11-slim
-RUN pip install mlflow
-CMD ["python"]
-EOF
+echo "🐳 Building images..."
+# Build the training image
+docker build -t mlflow-training:latest -f deploy/Dockerfile .
 
-echo "🐳 Building webhook server image (before-the-pod:latest)..."
+# Build the webhook server image
 docker build -t before-the-pod:latest -f server/Dockerfile .
 
 echo "🚀 Deploying webhook server & service..."
