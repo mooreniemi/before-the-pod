@@ -8,6 +8,7 @@ echo "🔁 Pointing shell to Minikube's Docker daemon..."
 eval $(minikube docker-env)
 
 echo "🔐 Generating TLS cert with SAN..."
+mkdir -p deploy/certs
 openssl req -x509 -nodes -days 365 \
   -newkey rsa:2048 \
   -keyout deploy/certs/tls.key \
@@ -16,8 +17,8 @@ openssl req -x509 -nodes -days 365 \
   -extensions v3_req
 
 echo "🔐 Creating Kubernetes TLS secret..."
-kubectl delete secret before-the-pod-tls --ignore-not-found
-kubectl create secret tls before-the-pod-tls \
+minikube kubectl -- delete secret before-the-pod-tls --ignore-not-found
+minikube kubectl -- create secret tls before-the-pod-tls \
   --cert=deploy/certs/tls.crt \
   --key=deploy/certs/tls.key
 
@@ -35,10 +36,10 @@ docker build -t mlflow-training:latest -f deploy/Dockerfile .
 docker build -t before-the-pod:latest -f server/Dockerfile .
 
 echo "🚀 Deploying webhook server & service..."
-kubectl apply -f deploy/k8s-deployment.yaml
+minikube kubectl -- apply -f deploy/k8s-deployment.yaml
 
 echo "🧠 Registering ValidatingWebhookConfiguration..."
-kubectl apply -f deploy/webhook.generated.yaml
+minikube kubectl -- apply -f deploy/webhook.generated.yaml
 
 echo "✅ Setup complete. You can now run:"
 echo "  kubectl apply -f deploy/job-good.yaml"
