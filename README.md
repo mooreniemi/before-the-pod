@@ -1,5 +1,51 @@
 # before the pod
 
+## wtf is this?
+
+This is a simple example of how to use a K8s webhook admission controller to introspect your docker container used by a Job and reject it if it doesn't meet your criteria, in this case, if it doesn't log to mlflow.
+
+
+```
++-----------------------+
+|   kubectl apply Job  |
+|   (yes-mlflow.yaml)  |
++----------+------------+
+           |
+           v
++------------------------------+
+| K8s API Server               |
+|  ValidatingAdmissionWebhook |
++----------+-------------------+
+           |
+           v
++--------------------------+           +-------------------------+
+|  Admission Controller    |  <──────  |  Job image: with-mlflow |
+|  Pod (before-the-pod)    |           +-------------------------+
+|  - Runs: docker inspect  |
+|  - Validates mlflow use  |
++--------------------------+
+           |
+  [If allowed] ✅
+           |
+           v
++-----------------------------+
+|       Job Pod              |
+|    (mlflow training)       |
+|  - Imports and uses mlflow |
+|  - Logs metrics            |
++-------------+--------------+
+              |
+              v
++-----------------------------+
+|     MLflow Server Pod       |
+|     (mlflow ui running)     |
+|  - Stores run data          |
+|  - Exposes UI               |
++-----------------------------+
+```
+
+## how to run
+
 Convenience command to see pod logs:
 
 ```
