@@ -46,26 +46,67 @@ with mlflow.start_run() as run:
 
     # Set some parameters
     learning_rate = 0.01
-    max_iter = 1000
+    max_iter = 100  # Reduced from 1000 to see progress more quickly
+    batch_size = 20
+    n_epochs = 10
 
     # Log parameters
-    logger.info(f"Logging parameters: learning_rate={learning_rate}, max_iter={max_iter}")
+    logger.info(f"Logging parameters: learning_rate={learning_rate}, max_iter={max_iter}, batch_size={batch_size}, n_epochs={n_epochs}")
     mlflow.log_param("learning_rate", learning_rate)
     mlflow.log_param("max_iter", max_iter)
+    mlflow.log_param("batch_size", batch_size)
+    mlflow.log_param("n_epochs", n_epochs)
 
-    # Train model
+    # Train model with mini-batches
     logger.info("Training logistic regression model...")
-    model = LogisticRegression(max_iter=max_iter)
-    model.fit(X_train, y_train)
+    model = LogisticRegression(max_iter=max_iter, warm_start=True)
 
-    # Make predictions and calculate accuracy
-    logger.info("Making predictions and calculating accuracy...")
+    for epoch in range(n_epochs):
+        # Shuffle data
+        indices = np.random.permutation(len(X_train))
+        X_shuffled = X_train[indices]
+        y_shuffled = y_train[indices]
+
+        # Mini-batch training
+        for i in range(0, len(X_train), batch_size):
+            X_batch = X_shuffled[i:i + batch_size]
+            y_batch = y_shuffled[i:i + batch_size]
+
+            model.fit(X_batch, y_batch)
+
+            # Calculate and log training metrics
+            train_pred = model.predict(X_train)
+            train_accuracy = accuracy_score(y_train, train_pred)
+
+            # Calculate loss (using log loss/cross-entropy)
+            train_proba = model.predict_proba(X_train)
+            train_loss = -np.mean(y_train * np.log(train_proba[:, 1] + 1e-10) +
+                                (1 - y_train) * np.log(1 - train_proba[:, 1] + 1e-10))
+
+            step = epoch * (len(X_train) // batch_size) + (i // batch_size)
+            mlflow.log_metrics({
+                "train_accuracy": train_accuracy,
+                "train_loss": train_loss
+            }, step=step)
+
+            if step % 5 == 0:  # Log every 5 steps
+                logger.info(f"Epoch {epoch}, Step {step}: Loss = {train_loss:.4f}, Accuracy = {train_accuracy:.4f}")
+
+    # Final evaluation
+    logger.info("Making final predictions and calculating metrics...")
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
+    test_accuracy = accuracy_score(y_test, y_pred)
 
-    # Log metrics
-    logger.info(f"Logging accuracy metric: {accuracy:.4f}")
-    mlflow.log_metric("accuracy", accuracy)
+    test_proba = model.predict_proba(X_test)
+    test_loss = -np.mean(y_test * np.log(test_proba[:, 1] + 1e-10) +
+                        (1 - y_test) * np.log(1 - test_proba[:, 1] + 1e-10))
+
+    # Log final metrics
+    logger.info(f"Logging final metrics - Test Accuracy: {test_accuracy:.4f}, Test Loss: {test_loss:.4f}")
+    mlflow.log_metrics({
+        "test_accuracy": test_accuracy,
+        "test_loss": test_loss
+    })
 
     # Log model
     logger.info("Logging trained model to MLflow...")
